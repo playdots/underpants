@@ -16,7 +16,7 @@ type OAuthInfo struct {
 
 	ClientID     string `json:"client-id"`
 	ClientSecret string `json:"client-secret"`
-	RedirectUri  string `json:"redirect_uri"`
+	RedirectUri  string `json:"redirect-uri"`
 
 	// Google provider properties
 	Domain string `json:"domain"`
@@ -79,6 +79,11 @@ type Info struct {
 		Key string
 	}
 
+	// Specify the Scheme of public internet facing traffic. While this will generally be 1:1 with
+	// the presences of Certs, using underpants behind another proxy that does SSL termination
+	// such as an AWS Elastic Load Balancer, would mean no certs, but use https scheme.
+	UseHttps bool `json:"use-https"`
+
 	// A mapping of group names to lists of user email addresses that are members
 	// of that group.  If this section is present, then the default behaviour for
 	// a route is to deny all users not in a group on its allowed-groups list.
@@ -103,10 +108,13 @@ func (i *Info) HasGroups() bool {
 // Scheme is a convience method for getting the relevant scheme based on whether certificates were
 // included in the configuration.
 func (i *Info) Scheme() string {
+	if i.UseHttps {
+		return "https"
+	}
 	if len(i.Certs) > 0 {
 		return "https"
 	}
-	return "https" //"http"
+	return "http"
 }
 
 // initRoute initializes a RouteInfo by parsing and validating its contents.
