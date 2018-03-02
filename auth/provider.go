@@ -25,6 +25,6 @@ type Provider interface {
 func GetCurrentURL(ctx *config.Context, r *http.Request) *url.URL {
 	u := *r.URL
 	u.Host = r.Host
-	u.Scheme = ctx.Scheme()
+	u.Scheme = "https" //ctx.Scheme()
 	return &u
 }
