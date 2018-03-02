@@ -16,7 +16,10 @@ type OAuthInfo struct {
 
 	ClientID     string `json:"client-id"`
 	ClientSecret string `json:"client-secret"`
+<<<<<<< HEAD
 	RedirectUri  string `json:"redirect-uri"`
+=======
+>>>>>>> parent of 5037530... use configurable redirect url instead of building form host:port
 
 	// Google provider properties
 	Domain string `json:"domain"`
@@ -139,9 +142,6 @@ func initInfo(n *Info) error {
 
 	if n.Oauth.ClientSecret == "" {
 		return errors.New("oauth.client-secret is required")
-	}
-	if n.Oauth.RedirectUri == "" {
-		return errors.New("oauth.redirect_uri is required")
 	}
 
 	for _, route := range n.Routes {
