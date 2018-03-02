@@ -16,6 +16,7 @@ type OAuthInfo struct {
 
 	ClientID     string `json:"client-id"`
 	ClientSecret string `json:"client-secret"`
+	RedirectUri  string `json:"redirect_uri"`
 
 	// Google provider properties
 	Domain string `json:"domain"`
@@ -130,6 +131,9 @@ func initInfo(n *Info) error {
 
 	if n.Oauth.ClientSecret == "" {
 		return errors.New("oauth.client-secret is required")
+	}
+	if n.Oauth.RedirectUri == "" {
+		return errors.New("oauth.redirect_uri is required")
 	}
 
 	for _, route := range n.Routes {

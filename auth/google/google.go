@@ -36,10 +36,7 @@ func configFor(ctx *config.Context) *oauth2.Config {
 			"https://www.googleapis.com/auth/userinfo.profile",
 			"https://www.googleapis.com/auth/userinfo.email",
 		},
-		RedirectURL: fmt.Sprintf("%s://%s%s",
-			ctx.Scheme(),
-			ctx.Host(),
-			auth.BaseURI),
+		RedirectURL: ctx.Oauth.RedirectUri,
 	}
 }
 
