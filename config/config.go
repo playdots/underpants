@@ -106,7 +106,7 @@ func (i *Info) Scheme() string {
 	if len(i.Certs) > 0 {
 		return "https"
 	}
-	return "http"
+	return "https" //"http"
 }
 
 // initRoute initializes a RouteInfo by parsing and validating its contents.
