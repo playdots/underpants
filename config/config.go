@@ -16,10 +16,6 @@ type OAuthInfo struct {
 
 	ClientID     string `json:"client-id"`
 	ClientSecret string `json:"client-secret"`
-<<<<<<< HEAD
-	RedirectUri  string `json:"redirect-uri"`
-=======
->>>>>>> parent of 5037530... use configurable redirect url instead of building form host:port
 
 	// Google provider properties
 	Domain string `json:"domain"`
