@@ -53,7 +53,7 @@ func (r *RouteInfo) ToURL() *url.URL {
 
 // Info is a configuration object that is loaded directly from the json config file.
 type Info struct {
-	// The host (without the port specification) that will be acting as the hub
+	// The host (with the port specification) that will be acting as the hub.
 	Host string
 
 	// OAuth related settings
