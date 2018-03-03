@@ -127,7 +127,22 @@ func initRoute(r *RouteInfo) error {
 	return nil
 }
 
+// If ENV var is set, overwrite the target passed in
+func initFromEnvVar(varName string, target *string) {
+	envVal := os.Getenv(varName)
+	if envVal != "" {
+		*target = envVal
+	}
+}
+
 func initInfo(n *Info) error {
+	// Allow overwriting oauth config from env vars
+	initFromEnvVar("OAUTH_PROVIDER", &n.Oauth.Provider)
+	initFromEnvVar("OAUTH_DOMAIN", &n.Oauth.Domain)
+	initFromEnvVar("OAUTH_BASE_URL", &n.Oauth.BaseURL)
+	initFromEnvVar("OAUTH_CLIENT_ID", &n.Oauth.ClientID)
+	initFromEnvVar("OAUTH_CLIENT_SECRET", &n.Oauth.ClientSecret)
+
 	if n.Oauth.BaseURL != "" {
 		n.Oauth.BaseURL = strings.TrimRight(n.Oauth.BaseURL, "/")
 	}
