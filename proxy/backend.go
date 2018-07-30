@@ -64,6 +64,7 @@ func (b *Backend) serveHTTPProxy(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		zap.L().Info("authentication required",
 			zap.String("host", r.Host),
+			zap.String("method", r.Method),
 			zap.String("uri", r.RequestURI))
 		http.Redirect(w, r,
 			b.AuthProvider.GetAuthURL(b.Ctx, r),
