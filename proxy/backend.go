@@ -64,7 +64,6 @@ func (b *Backend) serveHTTPProxy(w http.ResponseWriter, r *http.Request) {
 		zap.String("from", b.Route.From),
 		zap.String("uri", r.RequestURI),
 		zap.String("method", r.Method),
-		zap.String("body", bodyString),
 	}
 
 	u, err := user.DecodeFromRequest(r, b.Ctx.Key)
@@ -130,6 +129,7 @@ func (b *Backend) serveHTTPProxy(w http.ResponseWriter, r *http.Request) {
 
 	br.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
 	bodyString := string(bodyBytes)
+	logFields = append(logFields, zap.String("body", bodyString))
 
 	zap.L().Info("proxying request", logFields...)
 	bp, err := http.DefaultTransport.RoundTrip(br)
