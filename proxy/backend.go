@@ -70,9 +70,7 @@ func (b *Backend) serveHTTPProxy(w http.ResponseWriter, r *http.Request) {
 	u, err := user.DecodeFromRequest(r, b.Ctx.Key)
 	if err != nil {
 		zap.L().Info("authentication required. redirecting to auth provider", logFields...)
-		http.Redirect(w, r,
-			b.AuthProvider.GetAuthURL(b.Ctx, r),
-			http.StatusFound)
+		http.Redirect(w, r, b.AuthProvider.GetAuthURL(b.Ctx, r), http.StatusFound)
 		return
 	}
 	logFields = append(logFields, zap.String("user", u.Email))
