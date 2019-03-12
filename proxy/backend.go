@@ -146,7 +146,7 @@ func (b *Backend) serveHTTPProxy(w http.ResponseWriter, r *http.Request) {
 	// Headers we want to add during the proxy in addition to any client-supplied headers
 	// e.g. sensitive auth tokens that we do not want stored in client-side dashboards
 	if len(b.Route.ToAddHeaders) > 0 {
-		addToAddHeaders(br, b.Route.ToAddHeaders)
+		addToAddHeaders(br.Header, b.Route.ToAddHeaders)
 	}
 
 	// User information is passed to backends as headers.
