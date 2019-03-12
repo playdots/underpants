@@ -34,28 +34,11 @@ func copyHeaders(dst, src http.Header) {
 	}
 }
 
-func addToAddHeaders(dst http.Header, headerSets []AddHeader) {
-	for _, headerKeySet := range headerSets {
-		envKey := headerKeySet.EnvVarKey
-
-		if envKey == "" {
-			err := fmt.Sprintf("cannot have empty value for env-var-key")
-			panic(err)
-		}
-
-		headerVal := os.Getenv(envKey)
-		if headerVal == "" {
-			err := fmt.Sprintf("cannot have empty value for header in config: %s", headerKey)
-			panic(err)
-		}
-
-		destHeader := headerKeySet.DestinationHeaderKey
-		if destHeader == "" {
-			err := fmt.Sprintf("cannot have empty value for dest-header-key")
-			panic(err)
-		}
-
-		dst.Add(destHeader, headerVal)
+func addToAddHeaders(dst http.Header, toAddHeaders []ToAddHeader) {
+	for _, toAddHeader := range toAddHeaders {
+		headerVal := toAddHeader.DestHeaderVal
+		headerKey := toAddHeader.DestHeaderKey
+		dst.Add(headerKey, headerVal)
 	}
 }
 

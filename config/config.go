@@ -36,11 +36,6 @@ type RouteInfo struct {
 	// request path as per RFC 3986 Section 5.2.
 	To string
 
-	// Any headers we want the auth proxy to add for us, independent of any client-supplied headers
-	// that are copied over
-	// Note that these must match env vars set in adminAuthProxy on elasticbeanstalk, where the values are stored
-	ToAddHeaders []AddHeader `json:"to-add-headers"`
-
 	toURL *url.URL
 
 	// A list of groups which may access this route.  If groups are configured,
@@ -54,13 +49,19 @@ type RouteInfo struct {
 	// A special group, `*`, may be specified which allows any authenticated
 	// user.
 	AllowedDomainGroups []string `json:"allowed-domain-groups"`
+
+	// Any headers we want the auth proxy to add for us, independent of any client-supplied headers
+	// that are copied over
+	// Note that these must match env vars set in adminAuthProxy on elasticbeanstalk, where the values are stored
+	ToAddHeaders []ToAddHeader `json:"to-add-headers"`
 }
 
 // Used to map header keys pulled from elasticbeanstalk env to header names expected by
 // destinations proxied to
-type AddHeader struct {
-	DestinationHeaderKey string `json:"dest-header-key"`
-	EnvVarKey            string `json:"env-var-key"`
+type ToAddHeader struct {
+	EnvVarName    string `json:"env-var-name"`
+	DestHeaderKey string `json:"dest-header-key"`
+	DestHeaderVal string `json:"dest-header-val"`
 }
 
 // ToURL ...
@@ -163,6 +164,19 @@ func initFromEnvVar(varName string, target *string) {
 	}
 }
 
+func initToAddHeaders(r *RouteInfo) error {
+	headers := r.ToAddHeaders
+	for _, headerSet := range headers {
+		headerVal := os.Getenv(headerSet.EnvVarName)
+
+		if headerVal == "" {
+			panic("value missing for required %s ENV VAR: %s:", r.From, headerSet.EnvVarName)
+		}
+
+		r.DestHeaderVal = headerVal
+	}
+}
+
 func initInfo(n *Info) error {
 	// Allow overwriting oauth config from env vars
 	initFromEnvVar("OAUTH_PROVIDER", &n.Oauth.Provider)
@@ -189,6 +203,8 @@ func initInfo(n *Info) error {
 				route.From,
 				err)
 		}
+
+		initToAddHeaders(route)
 	}
 
 	return nil
