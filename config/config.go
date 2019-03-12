@@ -166,15 +166,19 @@ func initFromEnvVar(varName string, target *string) {
 
 func initToAddHeaders(r *RouteInfo) error {
 	headers := r.ToAddHeaders
+
 	for _, headerSet := range headers {
 		headerVal := os.Getenv(headerSet.EnvVarName)
 
 		if headerVal == "" {
-			panic("value missing for required %s ENV VAR: %s:", r.From, headerSet.EnvVarName)
+			msg := fmt.Sprintf("value missing for required %s ENV VAR: %s:", r.From, headerSet.EnvVarName)
+			return errors.New(msg)
 		}
 
-		r.DestHeaderVal = headerVal
+		headerSet.DestHeaderVal = headerVal
 	}
+
+	return nil
 }
 
 func initInfo(n *Info) error {

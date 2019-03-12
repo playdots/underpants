@@ -34,7 +34,7 @@ func copyHeaders(dst, src http.Header) {
 	}
 }
 
-func addToAddHeaders(dst http.Header, toAddHeaders []ToAddHeader) {
+func addToAddHeaders(dst http.Header, toAddHeaders []config.ToAddHeader) {
 	for _, toAddHeader := range toAddHeaders {
 		headerVal := toAddHeader.DestHeaderVal
 		headerKey := toAddHeader.DestHeaderKey
@@ -70,7 +70,6 @@ func (b *Backend) serveHTTPAuth(w http.ResponseWriter, r *http.Request) {
 func (b *Backend) serveHTTPProxy(w http.ResponseWriter, r *http.Request) {
 	logFields := []zap.Field{
 		zap.String("from", b.Route.From),
-		zap.String("to-add-headers", b.Route.ToAddHeaders),
 		zap.String("uri", r.RequestURI),
 		zap.String("method", r.Method),
 	}
