@@ -59,7 +59,7 @@ type RouteInfo struct {
 // Used to map header keys pulled from elasticbeanstalk env to header names expected by
 // destinations proxied to
 type AddHeader struct {
-	DestinationHeaderKey string `json:"destination-header-key"`
+	DestinationHeaderKey string `json:"dest-header-key"`
 	EnvVarKey            string `json:"env-var-key"`
 }
 
