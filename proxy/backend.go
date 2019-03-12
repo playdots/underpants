@@ -34,6 +34,31 @@ func copyHeaders(dst, src http.Header) {
 	}
 }
 
+func addToAddHeaders(dst http.Header, headerSets []AddHeader) {
+	for _, headerKeySet := range headerSets {
+		envKey := headerKeySet.EnvVarKey
+
+		if envKey == "" {
+			err := fmt.Sprintf("cannot have empty value for env-var-key")
+			panic(err)
+		}
+
+		headerVal := os.Getenv(envKey)
+		if headerVal == "" {
+			err := fmt.Sprintf("cannot have empty value for header in config: %s", headerKey)
+			panic(err)
+		}
+
+		destHeader := headerKeySet.DestinationHeaderKey
+		if destHeader == "" {
+			err := fmt.Sprintf("cannot have empty value for dest-header-key")
+			panic(err)
+		}
+
+		dst.Add(destHeader, headerVal)
+	}
+}
+
 func (b *Backend) serveHTTPAuth(w http.ResponseWriter, r *http.Request) {
 	c, p := r.FormValue("c"), r.FormValue("p")
 	if c == "" || !strings.HasPrefix(p, "/") {
@@ -62,6 +87,7 @@ func (b *Backend) serveHTTPAuth(w http.ResponseWriter, r *http.Request) {
 func (b *Backend) serveHTTPProxy(w http.ResponseWriter, r *http.Request) {
 	logFields := []zap.Field{
 		zap.String("from", b.Route.From),
+		zap.String("to-add-headers", b.Route.ToAddHeaders),
 		zap.String("uri", r.RequestURI),
 		zap.String("method", r.Method),
 	}
@@ -117,6 +143,12 @@ func (b *Backend) serveHTTPProxy(w http.ResponseWriter, r *http.Request) {
 
 	copyHeaders(br.Header, r.Header)
 
+	// Headers we want to add during the proxy in addition to any client-supplied headers
+	// e.g. sensitive auth tokens that we do not want stored in client-side dashboards
+	if len(b.Route.ToAddHeaders) > 0 {
+		addToAddHeaders(br, b.Route.ToAddHeaders)
+	}
+
 	// User information is passed to backends as headers.
 	br.Header.Add("Underpants-Email", url.QueryEscape(u.Email))
 	br.Header.Add("Underpants-Name", url.QueryEscape(u.Name))
@@ -139,6 +171,7 @@ func (b *Backend) serveHTTPProxy(w http.ResponseWriter, r *http.Request) {
 	defer bp.Body.Close()
 
 	copyHeaders(w.Header(), bp.Header)
+
 	w.WriteHeader(bp.StatusCode)
 	if _, err := io.Copy(w, bp.Body); err != nil {
 		panic(err)

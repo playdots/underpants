@@ -36,6 +36,11 @@ type RouteInfo struct {
 	// request path as per RFC 3986 Section 5.2.
 	To string
 
+	// Any headers we want the auth proxy to add for us, independent of any client-supplied headers
+	// that are copied over
+	// Note that these must match env vars set in adminAuthProxy on elasticbeanstalk, where the values are stored
+	ToAddHeaders []AddHeader `json:"to-add-headers"`
+
 	toURL *url.URL
 
 	// A list of groups which may access this route.  If groups are configured,
@@ -49,6 +54,13 @@ type RouteInfo struct {
 	// A special group, `*`, may be specified which allows any authenticated
 	// user.
 	AllowedDomainGroups []string `json:"allowed-domain-groups"`
+}
+
+// Used to map header keys pulled from elasticbeanstalk env to header names expected by
+// destinations proxied to
+type AddHeader struct {
+	DestinationHeaderKey string `json:"destination-header-key"`
+	EnvVarKey            string `json:"env-var-key"`
 }
 
 // ToURL ...
