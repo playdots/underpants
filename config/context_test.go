@@ -103,7 +103,7 @@ func TestInitToAddHeaders(t *testing.T) {
 	expectedVal := "secure-token-for-test-service"
 	os.Setenv(envName, expectedVal)
 
-	err := initToAddHeaders(ri)
+	err := InitToAddHeaders(ri)
 	assert.Nil(t, err)
 	assert.Equal(t, expectedVal, ri.ToAddHeaders[0].DestHeaderVal)
 }

@@ -2,7 +2,6 @@ package proxy
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -35,11 +34,13 @@ func copyHeaders(dst, src http.Header) {
 	}
 }
 
-func addToAddHeaders(dst http.Header, toAddHeaders []config.ToAddHeader) {
-	for _, toAddHeader := range toAddHeaders {
-		headerKey := toAddHeader.DestHeaderKey
-		headerVal := toAddHeader.DestHeaderVal
-		dst.Add(headerKey, headerVal)
+func addToAddHeaders(dst http.Header, toAddHeaders []*config.ToAddHeader) {
+	if len(toAddHeaders) > 0 {
+		for _, toAddHeader := range toAddHeaders {
+			headerKey := toAddHeader.DestHeaderKey
+			headerVal := toAddHeader.DestHeaderVal
+			dst.Add(headerKey, headerVal)
+		}
 	}
 }
 
@@ -128,9 +129,8 @@ func (b *Backend) serveHTTPProxy(w http.ResponseWriter, r *http.Request) {
 
 	// Headers we want to add during the proxy in addition to any client-supplied headers
 	// e.g. sensitive auth tokens that we do not want stored in client-side dashboards
-	if len(b.Route.ToAddHeaders) > 0 {
-		addToAddHeaders(br.Header, b.Route.ToAddHeaders)
-	}
+
+	addToAddHeaders(br.Header, b.Route.ToAddHeaders)
 
 	// User information is passed to backends as headers.
 	br.Header.Add("Underpants-Email", url.QueryEscape(u.Email))

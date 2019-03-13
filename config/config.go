@@ -164,7 +164,7 @@ func initFromEnvVar(varName string, target *string) {
 	}
 }
 
-func initToAddHeaders(r *RouteInfo) error {
+func InitToAddHeaders(r *RouteInfo) error {
 	headers := r.ToAddHeaders
 
 	for _, headerSet := range headers {
@@ -208,7 +208,7 @@ func initInfo(n *Info) error {
 				err)
 		}
 
-		if err := initToAddHeaders(route); err != nil {
+		if err := InitToAddHeaders(route); err != nil {
 			return err
 		}
 	}
