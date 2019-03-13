@@ -2,25 +2,21 @@ package proxy
 
 import (
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"testing"
 
-	"github.com/playdots/underpants/auth"
-	"github.com/playdots/underpants/auth/google"
 	"github.com/playdots/underpants/config"
+	"github.com/playdots/underpants/user"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 )
 
-func TestAddToAddHeaders(t *testing.T) {
-	ctx := &config.Context{
-		Info: &config.Info{
-			Oauth: config.OAuthInfo{
-				ClientID:     "client_id",
-				ClientSecret: "client_secret",
-			},
-			Host: "localhost",
-		},
-		Port: 5000,
+func TestAddProxyUserRequest(t *testing.T) {
+	user := &user.Info{
+		Email: "foo@expected-email-host.com",
+		Name:  "foo",
 	}
 
 	envName := "TEST_SERVICE_TOKEN"
@@ -31,36 +27,40 @@ func TestAddToAddHeaders(t *testing.T) {
 	}
 
 	toAddHeaders := []*config.ToAddHeader{header}
+	expectedTokenVal := "secure-token-for-test-service"
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, expectedTokenVal, r.Header.Get("Authorization"))
+	}))
+	defer ts.Close()
+
 	ri := &config.RouteInfo{
-		From:         "here",
-		To:           "there",
+		From:         "http://example.com",
+		To:           ts.URL,
 		ToAddHeaders: toAddHeaders,
 	}
 
-	expectedVal := "secure-token-for-test-service"
-	os.Setenv(envName, expectedVal)
+	os.Setenv(envName, expectedTokenVal)
 
-	var prv auth.Provider
-	prv = google.Provider
+	info := &config.Info{}
+	err := info.ReadFile("test.json")
+	require.NoError(t, err)
+
+	config.InitRoute(ri)
+	info.Routes = []*config.RouteInfo{ri}
+
+	ctx := &config.Context{
+		Info: info,
+	}
 
 	b := &Backend{
-		Ctx:          ctx,
-		Route:        ri,
-		AuthProvider: prv,
+		Ctx:   ctx,
+		Route: ri,
 	}
 
-	err := config.InitToAddHeaders(ri)
-	assert.Nil(t, err)
-	assert.Equal(t, expectedVal, ri.ToAddHeaders[0].DestHeaderVal)
+	wr := httptest.NewRecorder()
+	req := httptest.NewRequest("GET", "http://example.com/foo", nil)
 
-	r, _ := http.NewRequest("GET", "localhost", nil)
-	addToAddHeaders(r.Header, b.Route.ToAddHeaders)
-
-	for key, vals := range r.Header {
-		for _, val := range vals {
-			if key == "Authorization" {
-				assert.Equal(t, expectedVal, val)
-			}
-		}
-	}
+	b.proxyUserRequest(wr, req, user, []zap.Field{})
+	// see assertion within the request handler in NewServer above
 }

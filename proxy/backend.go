@@ -84,6 +84,10 @@ func (b *Backend) serveHTTPProxy(w http.ResponseWriter, r *http.Request) {
 	}
 	logFields = append(logFields, zap.String("user", u.Email))
 
+	b.proxyUserRequest(w, r, u, logFields)
+}
+
+func (b *Backend) proxyUserRequest(w http.ResponseWriter, r *http.Request, u *user.Info, logFields []zap.Field) {
 	if !b.Ctx.UserMemberOfAny(u.Email, b.Route.AllowedGroups) {
 		msg := "Forbidden: you are not a member of a group authorized to view this site."
 		zap.L().Info(msg, logFields...)

@@ -145,14 +145,19 @@ func (i *Info) Scheme() string {
 	return "http"
 }
 
-// initRoute initializes a RouteInfo by parsing and validating its contents.
-func initRoute(r *RouteInfo) error {
+// InitRoute initializes a RouteInfo by parsing and validating its contents.
+func InitRoute(r *RouteInfo) error {
 	toURL, err := url.Parse(r.To)
 	if err != nil {
 		return err
 	}
 
 	r.toURL = toURL
+
+	if err := initToAddHeaders(r); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -164,7 +169,7 @@ func initFromEnvVar(varName string, target *string) {
 	}
 }
 
-func InitToAddHeaders(r *RouteInfo) error {
+func initToAddHeaders(r *RouteInfo) error {
 	headers := r.ToAddHeaders
 
 	for _, headerSet := range headers {
@@ -202,14 +207,10 @@ func initInfo(n *Info) error {
 	}
 
 	for _, route := range n.Routes {
-		if err := initRoute(route); err != nil {
+		if err := InitRoute(route); err != nil {
 			return fmt.Errorf("Route %s has invalid To URL: %s",
 				route.From,
 				err)
-		}
-
-		if err := InitToAddHeaders(route); err != nil {
-			return err
 		}
 	}
 
