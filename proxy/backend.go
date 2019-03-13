@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -36,8 +37,8 @@ func copyHeaders(dst, src http.Header) {
 
 func addToAddHeaders(dst http.Header, toAddHeaders []config.ToAddHeader) {
 	for _, toAddHeader := range toAddHeaders {
-		headerVal := toAddHeader.DestHeaderVal
 		headerKey := toAddHeader.DestHeaderKey
+		headerVal := toAddHeader.DestHeaderVal
 		dst.Add(headerKey, headerVal)
 	}
 }

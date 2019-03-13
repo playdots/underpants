@@ -53,7 +53,7 @@ type RouteInfo struct {
 	// Any headers we want the auth proxy to add for us, independent of any client-supplied headers
 	// that are copied over
 	// Note that these must match env vars set in adminAuthProxy on elasticbeanstalk, where the values are stored
-	ToAddHeaders []ToAddHeader `json:"to-add-headers"`
+	ToAddHeaders []*ToAddHeader `json:"to-add-headers"`
 }
 
 // Used to map header keys pulled from elasticbeanstalk env to header names expected by
@@ -208,7 +208,9 @@ func initInfo(n *Info) error {
 				err)
 		}
 
-		initToAddHeaders(route)
+		if err := initToAddHeaders(route); err != nil {
+			return err
+		}
 	}
 
 	return nil

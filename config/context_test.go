@@ -1,8 +1,11 @@
 package config
 
 import (
+	"os"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 type userMemberOfAnyTest struct {
@@ -79,6 +82,30 @@ func TestDomainMemberOfAny(t *testing.T) {
 				test.Expected)
 		}
 	}
+}
+
+func TestInitToAddHeaders(t *testing.T) {
+	envName := "TEST_SERVICE_TOKEN"
+	header := &ToAddHeader{
+		EnvVarName:    envName,
+		DestHeaderKey: "Authorization",
+		DestHeaderVal: "",
+	}
+
+	toAddHeaders := []*ToAddHeader{header}
+
+	ri := &RouteInfo{
+		From:         "here",
+		To:           "there",
+		ToAddHeaders: toAddHeaders,
+	}
+
+	expectedVal := "secure-token-for-test-service"
+	os.Setenv(envName, expectedVal)
+
+	err := initToAddHeaders(ri)
+	assert.Nil(t, err)
+	assert.Equal(t, expectedVal, ri.ToAddHeaders[0].DestHeaderVal)
 }
 
 func TestDomainMemberOfAnyWithNoAllowedDomainGroups(t *testing.T) {
