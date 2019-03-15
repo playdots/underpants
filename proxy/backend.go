@@ -76,6 +76,11 @@ func (b *Backend) serveHTTPProxy(w http.ResponseWriter, r *http.Request) {
 		zap.String("method", r.Method),
 	}
 
+	// for admin dashboard xhr requests
+	w.Header().Add("Access-Control-Allow-Origin", b.Route.To)
+	w.Header().Add("Access-Control-Allow-Headers", "*")
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
+
 	u, err := user.DecodeFromRequest(r, b.Ctx.Key)
 	if err != nil {
 		zap.L().Info("authentication required. redirecting to auth provider", logFields...)
