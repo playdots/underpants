@@ -110,6 +110,8 @@ func TestInitToAddHeaders(t *testing.T) {
 
 func TestInitToAddHeadersBadEnv(t *testing.T) {
 	envVarName := "TEST_SERVICE_TOKEN"
+	os.Setenv(envVarName, "")
+
 	header := &ToAddHeader{
 		EnvVarName:    envVarName,
 		DestHeaderKey: "Authorization",
