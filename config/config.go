@@ -49,11 +49,13 @@ type RouteInfo struct {
 	// A special group, `*`, may be specified which allows any authenticated
 	// user.
 	AllowedDomainGroups []string `json:"allowed-domain-groups"`
+	AllowedOrigins      []string `json:"allowed-origins"`
 
 	// Any headers we want the auth proxy to add for us, independent of any client-supplied headers
 	// that are copied over
 	// Note that these must match env vars set in adminAuthProxy on elasticbeanstalk, where the values are stored
-	ToAddHeaders []*ToAddHeader `json:"to-add-headers"`
+	ToAddHeaders                []*ToAddHeader `json:"to-add-headers"`
+	ShareCookieAcrossSubdomains bool           `json:"share-cookie-across-subdomains"`
 }
 
 // Used to map header keys pulled from elasticbeanstalk env to header names expected by

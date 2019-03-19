@@ -85,9 +85,9 @@ func TestDomainMemberOfAny(t *testing.T) {
 }
 
 func TestInitToAddHeaders(t *testing.T) {
-	envName := "TEST_SERVICE_TOKEN"
+	envVarName := "TEST_SERVICE_TOKEN"
 	header := &ToAddHeader{
-		EnvVarName:    envName,
+		EnvVarName:    envVarName,
 		DestHeaderKey: "Authorization",
 		DestHeaderVal: "",
 	}
@@ -101,10 +101,37 @@ func TestInitToAddHeaders(t *testing.T) {
 	}
 
 	expectedVal := "secure-token-for-test-service"
-	os.Setenv(envName, expectedVal)
+	os.Setenv(envVarName, expectedVal)
 
-	err := InitToAddHeaders(ri)
+	err := initToAddHeaders(ri)
 	assert.Nil(t, err)
+	assert.Equal(t, expectedVal, ri.ToAddHeaders[0].DestHeaderVal)
+}
+
+func TestInitToAddHeadersBadEnv(t *testing.T) {
+	envVarName := "TEST_SERVICE_TOKEN"
+	header := &ToAddHeader{
+		EnvVarName:    envVarName,
+		DestHeaderKey: "Authorization",
+		DestHeaderVal: "",
+	}
+
+	toAddHeaders := []*ToAddHeader{header}
+
+	ri := &RouteInfo{
+		From:         "here",
+		To:           "there",
+		ToAddHeaders: toAddHeaders,
+	}
+
+	setVal := "secure-token-for-test-service"
+	badEnvVarName := "BAD_ENV"
+	os.Setenv(badEnvVarName, setVal)
+
+	err := initToAddHeaders(ri)
+	assert.NotNil(t, err)
+
+	expectedVal := ""
 	assert.Equal(t, expectedVal, ri.ToAddHeaders[0].DestHeaderVal)
 }
 
