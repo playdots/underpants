@@ -1,0 +1,11 @@
+{
+  "host" : "expected-email-host.com",
+  "oauth" : {
+    "provider"      : "google",
+    "domain"        : "expected-email-host.com",
+    "client-id"     : "client-id",
+    "client-secret" : "secret"
+  },
+  "use-https":true,
+  "use-strict-security-headers": true
+}

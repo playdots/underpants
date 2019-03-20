@@ -49,6 +49,21 @@ type RouteInfo struct {
 	// A special group, `*`, may be specified which allows any authenticated
 	// user.
 	AllowedDomainGroups []string `json:"allowed-domain-groups"`
+	AllowedOrigins      []string `json:"allowed-origins"`
+
+	// Any headers we want the auth proxy to add for us, independent of any client-supplied headers
+	// that are copied over
+	// Note that these must match env vars set in adminAuthProxy on elasticbeanstalk, where the values are stored
+	ToAddHeaders                []*ToAddHeader `json:"to-add-headers"`
+	ShareCookieAcrossSubdomains bool           `json:"share-cookie-across-subdomains"`
+}
+
+// Used to map header keys pulled from elasticbeanstalk env to header names expected by
+// destinations proxied to
+type ToAddHeader struct {
+	EnvVarName    string `json:"env-var-name"`
+	DestHeaderKey string `json:"dest-header-key"`
+	DestHeaderVal string `json:"dest-header-val"`
 }
 
 // ToURL ...
@@ -132,14 +147,19 @@ func (i *Info) Scheme() string {
 	return "http"
 }
 
-// initRoute initializes a RouteInfo by parsing and validating its contents.
-func initRoute(r *RouteInfo) error {
+// InitRoute initializes a RouteInfo by parsing and validating its contents.
+func InitRoute(r *RouteInfo) error {
 	toURL, err := url.Parse(r.To)
 	if err != nil {
 		return err
 	}
 
 	r.toURL = toURL
+
+	if err := initToAddHeaders(r); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -149,6 +169,23 @@ func initFromEnvVar(varName string, target *string) {
 	if envVal != "" {
 		*target = envVal
 	}
+}
+
+func initToAddHeaders(r *RouteInfo) error {
+	headers := r.ToAddHeaders
+
+	for _, headerSet := range headers {
+		headerVal := os.Getenv(headerSet.EnvVarName)
+
+		if headerVal == "" {
+			msg := fmt.Sprintf("value missing for required %s ENV VAR: %s:", r.From, headerSet.EnvVarName)
+			return errors.New(msg)
+		}
+
+		headerSet.DestHeaderVal = headerVal
+	}
+
+	return nil
 }
 
 func initInfo(n *Info) error {
@@ -172,7 +209,7 @@ func initInfo(n *Info) error {
 	}
 
 	for _, route := range n.Routes {
-		if err := initRoute(route); err != nil {
+		if err := InitRoute(route); err != nil {
 			return fmt.Errorf("Route %s has invalid To URL: %s",
 				route.From,
 				err)

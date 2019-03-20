@@ -14,6 +14,8 @@ import (
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/playdots/underpants/config"
 )
 
 const (
@@ -104,6 +106,7 @@ func DecodeAndVerify(c string, key []byte) (*Info, error) {
 // DecodeFromRequest decodes the user from the cookie found in the http.Request.
 func DecodeFromRequest(r *http.Request, key []byte) (*Info, error) {
 	c, err := r.Cookie(CookieKey)
+
 	if err != nil || c.Value == "" {
 		return nil, errors.New("empty cookie")
 	}
@@ -121,14 +124,55 @@ func DecodeFromRequest(r *http.Request, key []byte) (*Info, error) {
 	return u, nil
 }
 
-// CreateCookie creates a new http.Cookie for the user cookie.
-func CreateCookie(data string, secure bool) *http.Cookie {
-	return &http.Cookie{
+func CreateCookie(data string, ctx *config.Context, req *http.Request) *http.Cookie {
+	cookie := &http.Cookie{
 		Name:     CookieKey,
 		Value:    url.QueryEscape(data),
 		Path:     "/",
 		MaxAge:   CookieMaxAge,
 		HttpOnly: true,
-		Secure:   secure,
+		Secure:   ctx.HasCerts(),
 	}
+
+	// loop through all routes...
+	// if we want to share cookies across subdomains for a given route and the
+	// host making requests to it, and if the request is from a host that is in a
+	// given route's allowed origins, modify the domain set on the cookie by excluding the subdomain
+	for _, r := range ctx.Routes {
+		if r.ShareCookieAcrossSubdomains && originInAllowedOrigins(req.Host, r.AllowedOrigins) {
+			fullDomain, _ := url.Parse(req.Host)
+			domainEls := strings.Split(fullDomain.String(), ".")
+
+			// domainEls should be of length 3 if b.Route.From is a subdomain
+			// subdomain.domain.com => {subdomain domain com}
+			// ignore if there is no subdomain
+			if len(domainEls) < 3 {
+				return cookie
+			}
+
+			// if there is a subdomain, and we want to share the cookie across subdomains
+			// set the cookie.Domain to the naked domain (subdomain removed)
+			_, domainEls = domainEls[0], domainEls[1:]
+			nakedDomain := strings.Join(domainEls, ".")
+			cookie.Domain = nakedDomain
+
+			return cookie
+		}
+	}
+
+	return cookie
+}
+
+func originInAllowedOrigins(origin string, allowedOrigins []string) bool {
+	for _, allowed := range allowedOrigins {
+		allowedUrl, err := url.Parse(allowed)
+		if err != nil {
+			panic(err)
+		}
+
+		if allowedUrl.Host == origin {
+			return true
+		}
+	}
+	return false
 }

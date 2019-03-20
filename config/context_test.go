@@ -1,8 +1,11 @@
 package config
 
 import (
+	"os"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 type userMemberOfAnyTest struct {
@@ -79,6 +82,59 @@ func TestDomainMemberOfAny(t *testing.T) {
 				test.Expected)
 		}
 	}
+}
+
+func TestInitToAddHeaders(t *testing.T) {
+	envVarName := "TEST_SERVICE_TOKEN"
+	header := &ToAddHeader{
+		EnvVarName:    envVarName,
+		DestHeaderKey: "Authorization",
+		DestHeaderVal: "",
+	}
+
+	toAddHeaders := []*ToAddHeader{header}
+
+	ri := &RouteInfo{
+		From:         "here",
+		To:           "there",
+		ToAddHeaders: toAddHeaders,
+	}
+
+	expectedVal := "secure-token-for-test-service"
+	os.Setenv(envVarName, expectedVal)
+
+	err := initToAddHeaders(ri)
+	assert.Nil(t, err)
+	assert.Equal(t, expectedVal, ri.ToAddHeaders[0].DestHeaderVal)
+}
+
+func TestInitToAddHeadersBadEnv(t *testing.T) {
+	envVarName := "TEST_SERVICE_TOKEN"
+	os.Setenv(envVarName, "")
+
+	header := &ToAddHeader{
+		EnvVarName:    envVarName,
+		DestHeaderKey: "Authorization",
+		DestHeaderVal: "",
+	}
+
+	toAddHeaders := []*ToAddHeader{header}
+
+	ri := &RouteInfo{
+		From:         "here",
+		To:           "there",
+		ToAddHeaders: toAddHeaders,
+	}
+
+	setVal := "secure-token-for-test-service"
+	badEnvVarName := "BAD_ENV"
+	os.Setenv(badEnvVarName, setVal)
+
+	err := initToAddHeaders(ri)
+	assert.NotNil(t, err)
+
+	expectedVal := ""
+	assert.Equal(t, expectedVal, ri.ToAddHeaders[0].DestHeaderVal)
 }
 
 func TestDomainMemberOfAnyWithNoAllowedDomainGroups(t *testing.T) {

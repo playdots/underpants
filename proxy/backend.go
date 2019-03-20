@@ -34,6 +34,28 @@ func copyHeaders(dst, src http.Header) {
 	}
 }
 
+func setAccessControlHeaders(b *Backend, w http.ResponseWriter) {
+	// for admin dashboard xhr requests
+	allowedOrigins := b.Route.AllowedOrigins
+	if len(allowedOrigins) > 0 {
+		allowedOriginsString := strings.Join(allowedOrigins, ",")
+		w.Header().Set("Access-Control-Allow-Origin", allowedOriginsString)
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+		w.Header().Set("Access-Control-Allow-Headers", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "PUT, POST, GET, OPTIONS")
+	}
+}
+
+func addToAddHeaders(dst http.Header, toAddHeaders []*config.ToAddHeader) {
+	if len(toAddHeaders) > 0 {
+		for _, toAddHeader := range toAddHeaders {
+			headerKey := toAddHeader.DestHeaderKey
+			headerVal := toAddHeader.DestHeaderVal
+			dst.Add(headerKey, headerVal)
+		}
+	}
+}
+
 func (b *Backend) serveHTTPAuth(w http.ResponseWriter, r *http.Request) {
 	c, p := r.FormValue("c"), r.FormValue("p")
 	if c == "" || !strings.HasPrefix(p, "/") {
@@ -53,7 +75,7 @@ func (b *Backend) serveHTTPAuth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.SetCookie(w, user.CreateCookie(c, b.Ctx.HasCerts()))
+	http.SetCookie(w, user.CreateCookie(c, b.Ctx, r))
 
 	// Redirect validates the redirect path.
 	http.Redirect(w, r, p, http.StatusFound)
@@ -66,6 +88,13 @@ func (b *Backend) serveHTTPProxy(w http.ResponseWriter, r *http.Request) {
 		zap.String("method", r.Method),
 	}
 
+	setAccessControlHeaders(b, w)
+
+	// if we're dealing with a preflight request, return early after setting Access-Control-* headers
+	if r.Method == "OPTIONS" {
+		return
+	}
+
 	u, err := user.DecodeFromRequest(r, b.Ctx.Key)
 	if err != nil {
 		zap.L().Info("authentication required. redirecting to auth provider", logFields...)
@@ -74,6 +103,10 @@ func (b *Backend) serveHTTPProxy(w http.ResponseWriter, r *http.Request) {
 	}
 	logFields = append(logFields, zap.String("user", u.Email))
 
+	b.proxyUserRequest(w, r, u, logFields)
+}
+
+func (b *Backend) proxyUserRequest(w http.ResponseWriter, r *http.Request, u *user.Info, logFields []zap.Field) {
 	if !b.Ctx.UserMemberOfAny(u.Email, b.Route.AllowedGroups) {
 		msg := "Forbidden: you are not a member of a group authorized to view this site."
 		zap.L().Info(msg, logFields...)
@@ -117,6 +150,11 @@ func (b *Backend) serveHTTPProxy(w http.ResponseWriter, r *http.Request) {
 
 	copyHeaders(br.Header, r.Header)
 
+	// Headers we want to add during the proxy in addition to any client-supplied headers
+	// e.g. sensitive auth tokens that we do not want stored in client-side dashboards
+
+	addToAddHeaders(br.Header, b.Route.ToAddHeaders)
+
 	// User information is passed to backends as headers.
 	br.Header.Add("Underpants-Email", url.QueryEscape(u.Email))
 	br.Header.Add("Underpants-Name", url.QueryEscape(u.Name))
@@ -139,6 +177,7 @@ func (b *Backend) serveHTTPProxy(w http.ResponseWriter, r *http.Request) {
 	defer bp.Body.Close()
 
 	copyHeaders(w.Header(), bp.Header)
+
 	w.WriteHeader(bp.StatusCode)
 	if _, err := io.Copy(w, bp.Body); err != nil {
 		panic(err)

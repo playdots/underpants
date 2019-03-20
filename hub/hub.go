@@ -60,7 +60,7 @@ func Setup(ctx *config.Context, prv auth.Provider, mb *mux.Builder) {
 					panic(err)
 				}
 
-				http.SetCookie(w, user.CreateCookie(v, ctx.HasCerts()))
+				http.SetCookie(w, user.CreateCookie(v, ctx, r))
 
 				p := back.Path
 				if back.RawQuery != "" {

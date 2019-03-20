@@ -29,6 +29,6 @@
       "from"           : "sensitive.company.com",
       "to"             : "http://localhost:8081",
       "allowed-groups" : ["supersecret"]
-    },
+    }
   ]
 }
