@@ -1,0 +1,20 @@
+branch-defaults:
+  master:
+    environment: adminAuthProxy
+environment-defaults:
+  adminAuthProxy:
+    branch: null
+    repository: null
+global:
+  application_name: Auth Proxy
+  default_ec2_keyname: auth-proxy-eb
+  default_platform: arn:aws:elasticbeanstalk:us-east-1::platform/Go 1 running on 64bit
+    Amazon Linux/2.7.6
+  default_region: us-east-1
+  include_git_submodules: true
+  instance_profile: null
+  platform_name: null
+  platform_version: null
+  profile: eb-cli
+  sc: git
+  workspace_type: Application

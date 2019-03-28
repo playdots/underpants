@@ -1,6 +1,7 @@
 package proxy
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -30,7 +31,7 @@ func TestAddProxyUserRequest(t *testing.T) {
 	expectedTokenVal := "secure-token-for-test-service"
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, expectedTokenVal, r.Header.Get("Authorization"))
+		assert.Equal(t, fmt.Sprintf("Token token=%s", expectedTokenVal), r.Header.Get("Authorization"))
 	}))
 	defer ts.Close()
 

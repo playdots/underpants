@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -51,6 +52,11 @@ func addToAddHeaders(dst http.Header, toAddHeaders []*config.ToAddHeader) {
 		for _, toAddHeader := range toAddHeaders {
 			headerKey := toAddHeader.DestHeaderKey
 			headerVal := toAddHeader.DestHeaderVal
+
+			if headerKey == "Authorization" {
+				headerVal = fmt.Sprintf("Token token=%s", headerVal)
+			}
+
 			dst.Add(headerKey, headerVal)
 		}
 	}
