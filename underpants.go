@@ -200,7 +200,9 @@ func setupLogger() error {
 
 func main() {
 	flagPort := flag.Int("port", 0, "")
-	flagConf := flag.String("conf", "underpants.json", "")
+
+	configFilename := os.Getenv("CONFIG_FILENAME")
+	flagConf := flag.String("conf", configFilename, "")
 
 	flag.Parse()
 
