@@ -1,0 +1,42 @@
+{
+  "host" : "authproxy.local-campaigns.com",
+  "oauth" : {
+    "provider"      : "",
+    "domain"        : "",
+    "client-id"     : "",
+    "client-secret" : ""
+  },
+  "use-https": false,
+  "use-strict-security-headers": false,
+  "domain-groups": {
+    "dots-employees": [
+      "weplaydots.com",
+      "dots.co"
+    ],
+    "customer-support": [
+      "dots-gb.com"
+    ]
+  },
+  "routes" : [
+    {
+      "from" : "web.local-campaigns.com",
+      "to" : "http://web-internal.local-campaigns.com",
+      "allowed-domain-groups" : ["dots-employees"]
+    },
+    {
+      "from" : "admin.local-campaigns.com",
+      "to"   : "http://admin-internal.local-campaigns.com",
+      "allowed-origins" : ["http://web.local-campaigns.com"],
+      "allowed-domain-groups" : ["dots-employees"],
+      "share-cookie-across-subdomains" : true,
+      "to-add-headers" : [
+        {
+          "env-var-name" : "CAMPAIGNS_DEVELOPMENT_AUTH_TOKEN",
+          "dest-header-key" : "Authorization",
+          "dest-header-val" : ""
+        }
+      ]
+    }
+  ]
+}
+
