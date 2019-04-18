@@ -200,7 +200,7 @@ func setupLogger() error {
 
 func main() {
 	flagPort := flag.Int("port", 0, "")
-	flagConf := flag.String("conf", "underpants.json", "")
+	flagConf := flag.String("conf", "underpants-dev.json", "")
 
 	flag.Parse()
 
